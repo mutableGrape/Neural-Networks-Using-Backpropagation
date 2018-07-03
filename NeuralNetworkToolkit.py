@@ -66,25 +66,28 @@ class NeuralNetwork:
         # Back Propagate
         des_out = desired_output
         derror_dprev_out = 0
-        inpu = 0
+        inpu, delta = 0, 0
         for i, x in enumerate(prop_data[::-1]):
-            inpu, out = x
+            inpu, out = x   # inpu = input into layer, out = output of layer
             layer_number = self.nLayers-i
-            weight_matrix = self.layers[str(layer_number)][1]
+            weight_matrix, bias = self.layers[str(layer_number)][1:]
             if i == 0:
                 derror_dout = out-des_out
                 dout_draw_out = np.multiply(out, 1-out)
                 draw_out_dweights = inpu
                 derror_dweights = derror_dout*dout_draw_out*draw_out_dweights
                 derror_dprev_out = derror_dout * dout_draw_out
+                delta = derror_dout * dout_draw_out
             else:
                 dprev_out_dout = self.layers[str(layer_number+1)][1].T
                 dout_draw_out = np.multiply(out, 1-out)
                 draw_out_dweights = inpu
                 derror_dweights = derror_dprev_out * np.dot(dout_draw_out, dprev_out_dout) * draw_out_dweights 
                 derror_dprev_out = np.dot(derror_dprev_out, dprev_out_dout)
+                delta = np.dot(delta, dprev_out_dout) * dout_draw_out
             weight_matrix = weight_matrix - self.learnRate*derror_dweights.T
-            self.set_layer_data(layer_number, weight_matrix = weight_matrix)
+            bias = bias - self.learnRate*delta
+            self.set_layer_data(layer_number, weight_matrix = weight_matrix, bias = bias)
         return inp
         
     def set_layer_data(self, layer_number, weight_matrix=-1, bias=-1):
@@ -118,6 +121,6 @@ if __name__ == '__main__':
     N.set_layer_data(1, weight_matrix = np.array([[0.15,0.20],[0.25,0.30]]), bias= np.array([[0.35, 0.35]]))
     N.set_layer_data(2, weight_matrix = np.array([[0.40,0.45],[0.5,0.55]]), bias = np.array([[0.6, 0.6]]))
 
-    for i in range(1000):
-        print N.run_and_propagate(np.array([[0.05, 0.10]]), np.array([[0.01, 0.99]]))
-    
+    for i in range(10000):
+        N.run_and_propagate(np.array([[0.05, 0.10]]), np.array([[0.01, 0.99]]))
+    print N.run_and_propagate(np.array([[0.05, 0.10]]), np.array([[0.01, 0.99]]))
